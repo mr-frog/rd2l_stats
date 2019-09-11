@@ -24,7 +24,7 @@ def get_games(league_id, from_date):
 
 def calc_fscore(kills, deaths, lh, den, gpm, tower_kill, rosh_kill, tf_participation, obs_placed, camp_stacked, rune_taken, first_blood, stun_time):
     '''calculate fantasy score for a given player'''
-    fscore = (
+    return round((
     0.3*kills
     +3-0.3*deaths
     +0.003*lh
@@ -38,8 +38,7 @@ def calc_fscore(kills, deaths, lh, den, gpm, tower_kill, rosh_kill, tf_participa
     +4*first_blood
     +0.05*stun_time
     +3*tf_participation
-    )
-    return round(fscore,1)
+    ),1)
     
 def make_db(game_list, OUT):
     '''populate database file with match-stats from opendota-API'''
