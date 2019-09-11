@@ -66,11 +66,9 @@ def make_db(game_list, OUT):
                     #To identify first blood (for fantasy scoring)    
                     fb = i['firstblood_claimed']
    
-                    #Calculate Teamfight participation        
-                    if i['isRadiant']:
-                        tf_participation = round((i['kills']+i['assists'])/r['radiant_score'],2)
-                    else:
-                        tf_participation = round((i['kills']+i['assists'])/r['dire_score'],2)
+                    #Calculate Teamfight participation
+                    team_score = (r['dire_score'], r['radiant_score'])[i['isRadiant']]
+                    tf_participation = round((i['kills']+i['assists'])/team_score,2)
                         
                     #Calculate Fantasy Score    
                     fscore = calc_fscore(i['kills'], i['deaths'], i['last_hits'], i['denies'], i['gold_per_min'], i['tower_kills'], i['roshan_kills'], tf_participation, i['obs_placed'], i['camps_stacked'], i['rune_pickups'], fb, round(i['stuns'],2))
@@ -116,7 +114,7 @@ for a in i_list:
     points = rd2l_data.iat[rd2l_data[rd2l_data.columns[a]].idxmax(),a]
     hero = rd2l_data.iat[rd2l_data[rd2l_data.columns[a]].idxmax(),23]
     category = rd2l_data.columns[a]
-    print("Most %s %s on %s with %s."%(category.ljust(14," "),player,hero,points))
+    print("Most %s %s on %s with %s."%(category.ljust(18," "),player,hero,points))
     
 top_heroes = rd2l_data['Hero'].value_counts()
 print("Top 3 Heroes Picked:\t%s (%s)"%(top_heroes.index[0],top_heroes.iat[0]))
