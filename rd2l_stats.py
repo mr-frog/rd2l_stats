@@ -14,7 +14,7 @@ RAW = 'rd2l_fantasy_'+datetime.datetime.now().strftime("%Y-%m-%d")+'.raw'
 def get_games(league_id, from_date):
     '''get a list of games in last x days in a given league (rd2l s18 = 11202) from stratz API'''
     game_list = []
-    api_data = requests.get(stratz_URL+'league/'+str(league_id)+'/matches?take=5')
+    api_data = requests.get(stratz_URL+'league/'+str(league_id)+'/matches?take=50')
     l_d = api_data.json()
     for y in l_d:
         game_date = datetime.date.fromtimestamp(y['startDateTime'])
@@ -61,15 +61,13 @@ def make_db(game_list, OUT):
                 # Write raw data for debugging
                 raw_file.write(json.dumps(r)+"\n") 
                 
-                #To identify first blood (for fantasy scoring)
-                kills_list = []                
+                                 
                 for i in r['players']:
-                    for x in i['kills_log']:
-                        kills_list.append([x['time'],i['account_id']])                        
-                for i in r['players']:
-                    fb = 0
-                    if i['account_id'] == sorted(kills_list)[0][1]:
+                    #To identify first blood (for fantasy scoring)    
+                    if i['firstblood_claimed']:
                         fb = 1
+                    else:
+                        fb = 0
                         
                     #Calculate Teamfight participation        
                     if i['isRadiant']:
@@ -99,12 +97,12 @@ try:
 except:
     print("Please specify an integer as the first argument indicating how many days back to look for games.")
     sys.exit()
-    
-date = datetime.date.today() + datetime.timedelta(days=-int(sys.argv[1]))
+days_back = int(sys.argv[1])    
+date = datetime.date.today() + datetime.timedelta(days=-days_back)
 
 #Only make new DB if not existant yet
 if not os.path.isfile(OUT):
-    print("Fetching List of Games in last %s days."%sys.argv[1])
+    print("Fetching List of Games in last %s days."%days_back)
     game_list = get_games(11202, date)
     print("Found %s games."%len(game_list))
     print("Populating Database")
