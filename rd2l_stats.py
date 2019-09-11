@@ -1,4 +1,4 @@
-'''rd2l fantasy script V 0.1 by linoli ravioli'''
+'''rd2l fantasy script V 0.1 by linoli ravioli. Call the script with an integer indicating how many days back to go when looking for games as the first argument'''
 import requests
 import json
 import sys
@@ -93,7 +93,13 @@ def make_db(game_list, OUT):
             #Write DB to file        
             rd2l_data.to_csv(OUT,index=False)
             
-#Date after which to look for games        
+#Date after which to look for games
+try: 
+    sys.argv[1]
+except:
+    print("Please specify an integer as the first argument indicating how many days back to look for games.")
+    sys.exit()
+    
 date = datetime.date.today() + datetime.timedelta(days=-int(sys.argv[1]))
 
 #Only make new DB if not existant yet
