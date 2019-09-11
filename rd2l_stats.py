@@ -99,10 +99,10 @@ def make_db(game_list, OUT):
                         "Hero Healing", "Last Hits", "Denies", "GPM", "XPM", "Tow", 
                         "Tower Damage", "Ros", "TF","Obs Placed", "Camps Stacked", "Ru",
                         "FB", "Stuns", "Hero"])
-                    rd2l_data = rd2l_data.append(player_frame,ignore_index=True)
+                    rd2l_data = rd2l_data.append(player_frame, ignore_index = True)
                     
             #Write DB to file        
-            rd2l_data.to_csv(OUT,index=False)
+            rd2l_data.to_csv(OUT, index = False)
             
 #Check if days_back is given, set date after which to look for games
 try: 
