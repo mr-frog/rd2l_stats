@@ -64,11 +64,8 @@ def make_db(game_list, OUT):
                                  
                 for i in r['players']:
                     #To identify first blood (for fantasy scoring)    
-                    if i['firstblood_claimed']:
-                        fb = 1
-                    else:
-                        fb = 0
-                        
+                    fb = i['firstblood_claimed']
+   
                     #Calculate Teamfight participation        
                     if i['isRadiant']:
                         tf_participation = round((i['kills']+i['assists'])/r['radiant_score'],2)
