@@ -86,7 +86,7 @@ def make_db(game_list, OUT):
             #Write DB to file        
             rd2l_data.to_csv(OUT,index=False)
             
-#Date after which to look for games
+#Check if days_back is given, set date after which to look for games
 try: 
     sys.argv[1]
 except:
@@ -107,13 +107,13 @@ if not os.path.isfile(OUT):
 print("\nrd2l Stats:")
 rd2l_data = pd.read_csv(OUT)
 
-i_list = [4,5,6,7,8,9,10,11,12,13,15,18,19] #Columns to print
+col_list = [4,5,6,7,8,9,10,11,12,13,15,18,19] #Columns to print
 
-for a in i_list:
-    player = rd2l_data.iat[rd2l_data[rd2l_data.columns[a]].idxmax(),3]
-    points = rd2l_data.iat[rd2l_data[rd2l_data.columns[a]].idxmax(),a]
-    hero = rd2l_data.iat[rd2l_data[rd2l_data.columns[a]].idxmax(),23]
-    category = rd2l_data.columns[a]
+for col in col_list:
+    player = rd2l_data.iat[rd2l_data[rd2l_data.columns[col]].idxmax(),3]
+    points = rd2l_data.iat[rd2l_data[rd2l_data.columns[col]].idxmax(),col]
+    hero = rd2l_data.iat[rd2l_data[rd2l_data.columns[col]].idxmax(),23]
+    category = rd2l_data.columns[col]
     print("Most %s %s on %s with %s."%(category.ljust(18," "),player,hero,points))
     
 top_heroes = rd2l_data['Hero'].value_counts()
