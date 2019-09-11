@@ -22,7 +22,8 @@ def get_games(league_id, from_date):
             game_list.append(y['id'])
     return game_list
 
-def calc_fscore(kills, deaths, lh, den, gpm, tower_kill, rosh_kill, tf_participation, obs_placed, camp_stacked, rune_taken, first_blood, stun_time):
+def calc_fscore(kills, deaths, lh, den, gpm, tower_kill, rosh_kill, tf_participation,
+                obs_placed, camp_stacked, rune_taken, first_blood, stun_time):
     '''calculate fantasy score for a given player'''
     return round((
     0.3 * kills
