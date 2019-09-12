@@ -15,6 +15,9 @@ def get_games(league_id, from_date):
     '''get a list of games in last x days in a given league (rd2l s18 = 11202) from stratz API'''
     game_list = []
     api_data = requests.get(stratz_URL+'league/'+str(league_id)+'/matches?take=50')
+    if api_data.status_code == 404:
+        print("Stratz API not available, try again later.")
+        sys.exit()
     l_d = api_data.json()
     for y in l_d:
         game_date = datetime.date.fromtimestamp(y['startDateTime'])
@@ -118,6 +121,8 @@ if not os.path.isfile(OUT):
     print("Fetching List of Games in last %s days."%days_back)
     game_list = get_games(11202, date)
     print("Found %s games."%len(game_list))
+    if len(game_list) == 0:
+        sys.exit()
     print("Populating Database")
     make_db(game_list, OUT)
 
