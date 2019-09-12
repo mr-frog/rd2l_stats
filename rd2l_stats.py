@@ -57,7 +57,7 @@ def make_db(game_list, OUT):
                                                 "Hero Damage", "Hero Healing", "Last Hits",
                                                 "Denies", "GPM", "XPM", "Tow", "Tower Damage",
                                                 "Ros", "TF","Obs Placed", "Camps Stacked", "Ru",
-                                                "FB", "Stuns", "Hero"])
+                                                "FB", "Stuns", "Hero","Game Length","Total Kills"])
         with open(OUT, "w") as out_file:
             for game in game_list:
                 print("Parsing Game %s"%game) 
@@ -96,12 +96,13 @@ def make_db(game_list, OUT):
                         i['deaths'], i['assists'],i['hero_damage'],i['hero_healing'],i['last_hits'],
                         i['denies'], i['gold_per_min'], i['xp_per_min'], i['tower_kills'], 
                         i['tower_damage'], i['roshan_kills'], tf_participation, i['obs_placed'],
-                        i['camps_stacked'], i['rune_pickups'], fb, i['stuns'], hero)],
+                        i['camps_stacked'], i['rune_pickups'], fb, i['stuns'], hero, r['duration'], 
+                        (r['dire_score']+r['radiant_score']))],
                         columns = ["Full Match", "Start Time", "Account_id", "Player", 
                         "Fantasy Points", "Kills", "Deaths", "Assists", "Hero Damage", 
                         "Hero Healing", "Last Hits", "Denies", "GPM", "XPM", "Tow", 
                         "Tower Damage", "Ros", "TF","Obs Placed", "Camps Stacked", "Ru",
-                        "FB", "Stuns", "Hero"])
+                        "FB", "Stuns", "Hero","Game Length","Total Kills"])
                     rd2l_data = rd2l_data.append(player_frame, ignore_index = True)
                     
             #Write DB to file        
@@ -143,4 +144,19 @@ top_heroes = rd2l_data['Hero'].value_counts()
 print("Top 3 Heroes Picked:\t%s (%s)"%(top_heroes.index[0], top_heroes.iat[0]))
 print("\t\t\t%s (%s)"%(top_heroes.index[1], top_heroes.iat[1]))
 print("\t\t\t%s (%s)"%(top_heroes.index[2], top_heroes.iat[2]))
-
+#Longest Game
+game = rd2l_data.iat[rd2l_data["Game Length"].idxmax(), 0]
+time = rd2l_data.iat[rd2l_data["Game Length"].idxmax(), 24]
+print("Longest Game:\t\thttps://www.opendota.com/matches/%s, %s"%(game,datetime.timedelta(seconds=int(time))))
+#Shortest Game
+game = rd2l_data.iat[rd2l_data["Game Length"].idxmin(), 0]
+time = rd2l_data.iat[rd2l_data["Game Length"].idxmin(), 24]
+print("Shortest Game:\t\thttps://www.opendota.com/matches/%s, %s"%(game,datetime.timedelta(seconds=int(time))))
+#Most Kills
+game = rd2l_data.iat[rd2l_data["Total Kills"].idxmax(), 0]
+kills = rd2l_data.iat[rd2l_data["Total Kills"].idxmax(), 25]
+print("Most Kills:\t\thttps://www.opendota.com/matches/%s, %s"%(game,kills))
+#Least Kills
+game = rd2l_data.iat[rd2l_data["Total Kills"].idxmin(), 0]
+kills = rd2l_data.iat[rd2l_data["Total Kills"].idxmin(), 25]
+print("Most Kills:\t\thttps://www.opendota.com/matches/%s, %s"%(game,kills))
