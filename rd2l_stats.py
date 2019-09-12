@@ -159,4 +159,4 @@ print("Most Kills:\t\thttps://www.opendota.com/matches/%s, %s"%(game,kills))
 #Least Kills
 game = rd2l_data.iat[rd2l_data["Total Kills"].idxmin(), 0]
 kills = rd2l_data.iat[rd2l_data["Total Kills"].idxmin(), 25]
-print("Most Kills:\t\thttps://www.opendota.com/matches/%s, %s"%(game,kills))
+print("Least Kills:\t\thttps://www.opendota.com/matches/%s, %s"%(game,kills))
