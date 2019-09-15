@@ -5,11 +5,14 @@ import sys
 import datetime
 import pandas as pd
 import os
+from PIL import Image, ImageDraw, ImageFont
+import shutil
 
 stratz_URL = 'http://api.stratz.com/api/v1/'
 opendota_URL = 'http://api.opendota.com/api/'
 OUT = 'rd2l_fantasy_'+datetime.datetime.now().strftime("%Y-%m-%d")+'.out'
 RAW = 'rd2l_fantasy_'+datetime.datetime.now().strftime("%Y-%m-%d")+'.raw'
+PIC = 'rd2l_fantasy_'+datetime.datetime.now().strftime("%Y-%m-%d")+'.png'
 
 def get_games(league_id, from_date):
     '''get a list of games in last x days in a given league (rd2l s18 = 11202) from stratz API'''
@@ -78,7 +81,7 @@ def make_db(raw_file, OUT):
                                             "Denies", "GPM", "XPM", "Tow", "Tower Damage",
                                             "Ros", "TF","Obs Placed", "Camps Stacked", "Ru",
                                             "FB", "Stuns", "Hero","Game Length", "Total Kills",
-                                            "FPPM", "Lane", "Role"])
+                                            "FPPM", "Lane", "Role", "Hero Pic"])
     with open(raw_file, "r") as raw:
         raw_data = json.load(raw)
                                                                                        
@@ -102,6 +105,7 @@ def make_db(raw_file, OUT):
                 hero_id = i['hero_id']
                 index = hero_data.index[hero_data['id'] == hero_id].tolist()
                 hero = hero_data.iat[index[0], 2]
+                hero_pic = hero_data.iat[index[0], 6]
                 
                 #Populate DB
                 start_date = datetime.date.fromtimestamp(r['start_time']).strftime("%Y-%m-%d")
@@ -112,18 +116,80 @@ def make_db(raw_file, OUT):
                     i['tower_damage'], i['roshan_kills'], tf_participation, i['obs_placed'],
                     i['camps_stacked'], i['rune_pickups'], fb, i['stuns'], hero, r['duration'], 
                     (r['dire_score']+r['radiant_score']), round(fscore*60/r['duration'],4),
-                    i['lane'], i['lane_role'])],
+                    i['lane'], i['lane_role'], hero_pic)],
                     columns = ["Full Match", "Start Time", "Account_id", "Player", 
                     "Fantasy Points", "Kills", "Deaths", "Assists", "Hero Damage", 
                     "Hero Healing", "Last Hits", "Denies", "GPM", "XPM", "Tow", 
                     "Tower Damage", "Ros", "TF","Obs Placed", "Camps Stacked", "Ru",
                     "FB", "Stuns", "Hero", "Game Length", "Total Kills", "FPPM",
-                    "Lane", "Role"])
+                    "Lane", "Role", "Hero Pic"])
                 rd2l_data = rd2l_data.append(player_frame, ignore_index = True)
                 
         #Write DB to file        
         rd2l_data.to_csv(OUT, index = False)
         
+def makeimage(player_names, point_list, date):
+#Generate Fantasy Team Image
+    top = 55
+    p_top = top + 70
+    h_top = p_top + 150
+    a = Image.new('RGB', (850,400), color='Grey')
+    h1 = Image.open('core_0.png').resize((150,84), resample=1)
+    h2 = Image.open('core_1.png').resize((150,84), resample=1)
+    h3 = Image.open('mid.png').resize((150,84), resample=1)
+    h4 = Image.open('sup_0.png').resize((150,84), resample=1)
+    h5 = Image.open('sup_1.png').resize((150,84), resample=1)
+    p1 = Image.open('core_player_0.png').resize((150,150), resample=1)
+    p2 = Image.open('core_player_1.png').resize((150,150), resample=1)
+    p3 = Image.open('mid_player_0.png').resize((150,150), resample=1)
+    p4 = Image.open('sup_player_0.png').resize((150,150), resample=1)
+    p5 = Image.open('sup_player_1.png').resize((150,150), resample=1)
+    
+    a.paste(h1, (50, h_top))
+    a.paste(h2, (200, h_top))
+    a.paste(h3, (350, h_top))
+    a.paste(h4, (500, h_top))
+    a.paste(h5, (650, h_top))
+    
+    a.paste(p1, (50, p_top))
+    a.paste(p2, (200, p_top))
+    a.paste(p3, (350, p_top))
+    a.paste(p4, (500, p_top))
+    a.paste(p5, (650, p_top))
+    
+    draw = ImageDraw.Draw(a)
+    size = 30
+    fnt = ImageFont.truetype('arial.ttf', size)
+    date_string = date.strftime('%a, %d.%m.')
+    w, h = draw.textsize("RD2L Fantasy Dream Team - %s"%date_string, font = fnt)
+    draw.text(((850-w)/2, 10), "RD2L Fantasy Dream Team - %s"%date_string, font = fnt, fill = 'black')  
+    size = 26
+    fnt = ImageFont.truetype('arial.ttf', size)    
+    w, h = draw.textsize("Core", font = fnt)
+    draw.text(((400-w)/2, top), "Core", font = fnt, fill = 'black')
+    w, h = draw.textsize("Mid", font = fnt)
+    draw.text(((850-w)/2, top), "Mid", font = fnt, fill = 'black')
+    w, h = draw.textsize("Suppot", font = fnt)
+    draw.text(((1300-w)/2, top), "Support", font = fnt, fill = 'black')
+    r = 250
+    for name in player_names:
+        size = 26
+        fnt = ImageFont.truetype('arial.ttf', size)
+        w, h = draw.textsize(name, font = fnt)
+        while w > 150:
+            size -= 1
+            fnt = ImageFont.truetype('arial.ttf', size)
+            w, h = draw.textsize(name, font = fnt)
+        draw.text(((r-w)/2, top+30), name, font = fnt)
+        r+= 300
+    r = 250
+    for points in point_list:
+        size = 26
+        fnt = ImageFont.truetype('arial.ttf', size)
+        w, h = draw.textsize(str(points), font = fnt)
+        draw.text(((r-w)/2, h_top + 89), str(points), font = fnt)
+        r+= 300
+    return a      
 #Check if days_back is given, set date after which to look for games
 try: 
     sys.argv[1]
@@ -148,7 +214,7 @@ make_db(RAW, OUT)
 print("\nrd2l Stats:")
 rd2l_data = pd.read_csv(OUT)
 
-col_list = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 18, 19,26] #Columns to print
+col_list = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 18, 19, 26] #Columns to print
 
 for col in col_list:
     player = rd2l_data.iat[rd2l_data[rd2l_data.columns[col]].idxmax(), 3]
@@ -178,6 +244,8 @@ kills = rd2l_data.iat[rd2l_data["Total Kills"].idxmin(), 25]
 print("**Least Kills** - %s (<https://www.opendota.com/matches/%s>)"%(kills, game))
 #Fantasy Dream Team
 print("**RD2L Fantasy Dream Team**")
+player_names=[]
+point_list=[]
 #Core
 print("**Core**")
 sort_data = rd2l_data[rd2l_data['Role']==3]
@@ -187,7 +255,23 @@ for i in [0, 1]:
     points = sort_data.iat[i, 4]
     hero = sort_data.iat[i, 23]
     game = sort_data.iat[i, 0]
-    print("\t%s on %s with %s (<https://www.opendota.com/matches/%s>)"%(player, points, hero, game))
+    hero_pic = sort_data.iat[i, 29]
+    url = 'https://api.opendota.com'+hero_pic
+    pic = requests.get(url, stream = True)
+    if pic.status_code == 200:
+        with open('core_'+str(i)+'.png', "wb") as f:
+            pic.raw.decode_content = True
+            shutil.copyfileobj(pic.raw, f)
+    player_id = sort_data.iat[i,2]
+    player_url = requests.get(opendota_URL+'players/'+str(player_id)).json()['profile']['avatarfull']
+    pic = requests.get(player_url, stream = True)
+    if pic.status_code == 200:
+        with open('core_player_'+str(i)+'.png', "wb") as f:
+            pic.raw.decode_content = True
+            shutil.copyfileobj(pic.raw, f)    
+    print("\t%s on %s with %s (<https://www.opendota.com/matches/%s>)"%(player, hero, points, game))
+    player_names.append(player)
+    point_list.append(points)
 print("**Mid**")
 sort_data = rd2l_data[rd2l_data['Role']==2]
 sort_data = sort_data.sort_values(by = 'Fantasy Points', ascending = False)
@@ -196,7 +280,23 @@ for i in [0]:
     points = sort_data.iat[i, 4]
     hero = sort_data.iat[i, 23]
     game = sort_data.iat[i, 0]
-    print("\t%s on %s with %s (<https://www.opendota.com/matches/%s>)"%(player, points, hero, game))
+    hero_pic = sort_data.iat[i, 29]
+    url = 'https://api.opendota.com'+hero_pic
+    pic = requests.get(url, stream = True)
+    if pic.status_code == 200:
+        with open('mid'+'.png', "wb") as f:
+            pic.raw.decode_content = True
+            shutil.copyfileobj(pic.raw, f)
+    player_id = sort_data.iat[i,2]
+    player_url = requests.get(opendota_URL+'players/'+str(player_id)).json()['profile']['avatarfull']
+    pic = requests.get(player_url, stream = True)
+    if pic.status_code == 200:
+        with open('mid_player_'+str(i)+'.png', "wb") as f:
+            pic.raw.decode_content = True
+            shutil.copyfileobj(pic.raw, f)  
+    print("\t%s on %s with %s (<https://www.opendota.com/matches/%s>)"%(player, hero, points, game))
+    player_names.append(player)
+    point_list.append(points)
 print("**Support**")
 sort_data = rd2l_data[rd2l_data['Role']==1]
 sort_data = sort_data.sort_values(by = 'Fantasy Points', ascending = False)
@@ -205,4 +305,24 @@ for i in [0, 1]:
     points = sort_data.iat[i, 4]
     hero = sort_data.iat[i, 23]
     game = sort_data.iat[i, 0]
-    print("\t%s on %s with %s (<https://www.opendota.com/matches/%s>)"%(player, points, hero, game))
+    hero_pic = sort_data.iat[i, 29]
+    url = 'https://api.opendota.com'+hero_pic
+    pic = requests.get(url, stream = True)
+    if pic.status_code == 200:
+        with open('sup_'+str(i)+'.png', "wb") as f:
+            pic.raw.decode_content = True
+            shutil.copyfileobj(pic.raw, f)
+    player_id = sort_data.iat[i,2]
+    player_url = requests.get(opendota_URL+'players/'+str(player_id)).json()['profile']['avatarfull']
+    pic = requests.get(player_url, stream = True)
+    if pic.status_code == 200:
+        with open('sup_player_'+str(i)+'.png', "wb") as f:
+            pic.raw.decode_content = True
+            shutil.copyfileobj(pic.raw, f)  
+    print("\t%s on %s with %s (<https://www.opendota.com/matches/%s>)"%(player, hero, points, game))
+    player_names.append(player)
+    point_list.append(points)
+
+#Image
+image = makeimage(player_names, point_list, date)
+image.save(PIC)
