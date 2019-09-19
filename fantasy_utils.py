@@ -6,7 +6,6 @@ import pandas as pd
 import os
 from PIL import Image, ImageDraw, ImageFont
 import time
-import role_predicter as rp
 from io import StringIO
 from joblib import dump, load
 stratz_URL = 'http://api.stratz.com/api/v1/'
