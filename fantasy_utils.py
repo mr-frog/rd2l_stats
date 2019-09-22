@@ -34,7 +34,7 @@ def get_games(league_id, from_date, take):
         game_date = datetime.date.fromtimestamp(y['startDateTime'])
         if from_date == 0:
             game_list.append(y['id'])
-        elif game_date >= from_date:
+        elif game_date == from_date:
             game_list.append(y['id'])
     return game_list
 
@@ -206,59 +206,53 @@ def makeimage(folder, player_names, point_list, date):
     top = 50
     p_top = top + 72
     h_top = p_top + 162
-    a = Image.open('fantasy_template.png')
+    a = Image.open('fantasy_template.png').resize((1374, 459), resample = 1)
     hero_size = (150, 80)
     player_size = (150, 150)
-    h1 = Image.open(os.path.join(folder, '1.png')).resize(hero_size, resample=1)
-    h2 = Image.open(os.path.join(folder, '3.png')).resize(hero_size, resample=1)
-    h3 = Image.open(os.path.join(folder, '2.png')).resize(hero_size, resample=1)
-    h4 = Image.open(os.path.join(folder, '4.png')).resize(hero_size, resample=1)
-    h5 = Image.open(os.path.join(folder, '5.png')).resize(hero_size, resample=1)
-    p1 = Image.open(os.path.join(folder, '1_player.png')).resize(player_size, resample=1)
-    p2 = Image.open(os.path.join(folder, '3_player.png')).resize(player_size, resample=1)
-    p3 = Image.open(os.path.join(folder, '2_player.png')).resize(player_size, resample=1)
-    p4 = Image.open(os.path.join(folder, '4_player.png')).resize(player_size, resample=1)
-    p5 = Image.open(os.path.join(folder, '5_player.png')).resize(player_size, resample=1)
+    h1 = Image.open(os.path.join(folder, '1.png')).resize(hero_size, resample = 1)
+    h2 = Image.open(os.path.join(folder, '2.png')).resize(hero_size, resample = 1)
+    h3 = Image.open(os.path.join(folder, '3.png')).resize(hero_size, resample = 1)
+    h4 = Image.open(os.path.join(folder, '4.png')).resize(hero_size, resample = 1)
+    h5 = Image.open(os.path.join(folder, '5.png')).resize(hero_size, resample = 1)
+    p1 = Image.open(os.path.join(folder, '1_player.png')).resize(player_size, resample = 1)
+    p2 = Image.open(os.path.join(folder, '2_player.png')).resize(player_size, resample = 1)
+    p3 = Image.open(os.path.join(folder, '3_player.png')).resize(player_size, resample = 1)
+    p4 = Image.open(os.path.join(folder, '4_player.png')).resize(player_size, resample = 1)
+    p5 = Image.open(os.path.join(folder, '5_player.png')).resize(player_size, resample = 1)
     b = Image.new('RGB', (154,154), 'silver')
     
-    a.paste(b, (69, p_top-2))
-    a.paste(b, (310, p_top-2))
-    a.paste(b, (608, p_top-2))
-    a.paste(b, (909, p_top-2))
-    a.paste(b, (1149, p_top-2))
-    
-    a.paste(h1, (71, h_top))    
-    a.paste(h2, (312, h_top))
-    a.paste(h3, (610, h_top))
-    a.paste(h4, (911, h_top))
-    a.paste(h5, (1151, h_top))
-    
-    a.paste(p1, (71, p_top))
-    a.paste(p2, (312, p_top))
-    a.paste(p3, (610, p_top))
-    a.paste(p4, (911, p_top))
-    a.paste(p5, (1151, p_top))
+
     
     draw = ImageDraw.Draw(a)
     size = 26
     fnt = ImageFont.truetype('arial.ttf', size)
-    date_string = date.strftime('%A - %d.%m.')
-    w, h = draw.textsize("RD2L Fantasy Dream Team", font = fnt)
-    draw.text(((1374-w)/2, 8), "RD2L Fantasy Dream Team", font = fnt, fill = 'white')
+    day = date.strftime('%a').upper()
+    date_string = 'CET-' + day + ' - ' + date.strftime('%d.%m.')
+    w, h = draw.textsize("RD2L Team of the Week", font = fnt)
+    draw.text(((1360-w)/2, 5), "RD2L Team of the Week", font = fnt, fill = 'white')
     draw.text((30, 8), "%s"%date_string, font = fnt, fill = 'white')      
     size = 26
     fnt = ImageFont.truetype('arial.ttf', size)    
 
-    r = [56+180+56, 297+180+297, 595+180+595, 896+180+896, 1136+180+1136]
-    role_names = ["Pos 1", "Pos 3", "Pos 4", "Pos 5"]
-    x = 0
-    for y in [0,1,3,4]:
-        size = 20
-        text = role_names[x]
-        fnt = ImageFont.truetype('arial.ttf', size)
-        w, h = draw.textsize(text, font = fnt)
-        draw.text(((r[y]-w)/2, p_top - 58), text, font = fnt)
-        x += 1
+    r = [50+207+50, 307+207+307, 563+207+563, 873+207+873, 1119+207+1119]
+    
+    a.paste(b, (int((r[0]-154)/2), p_top-2))
+    a.paste(b, (int((r[1]-154)/2), p_top-2))
+    a.paste(b, (int((r[2]-154)/2), p_top-2))
+    a.paste(b, (int((r[3]-154)/2), p_top-2))
+    a.paste(b, (int((r[4]-154)/2), p_top-2))
+    
+    a.paste(h1, (int((r[0]-150)/2), h_top))    
+    a.paste(h2, (int((r[1]-150)/2), h_top))
+    a.paste(h3, (int((r[2]-150)/2), h_top))
+    a.paste(h4, (int((r[3]-150)/2), h_top))
+    a.paste(h5, (int((r[4]-150)/2), h_top))
+    
+    a.paste(p1, (int((r[0]-150)/2), p_top))
+    a.paste(p2, (int((r[1]-150)/2), p_top))
+    a.paste(p3, (int((r[2]-150)/2), p_top))
+    a.paste(p4, (int((r[3]-150)/2), p_top))
+    a.paste(p5, (int((r[4]-150)/2), p_top))
     i = 0
     for name in player_names:
         size = 20
@@ -281,12 +275,10 @@ def makeimage(folder, player_names, point_list, date):
     return a   
 
 def get_roles(model, data):
-# Load dataset
-#cols = (29, 35, 36)
     cols = (4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 25, 26, 27, 29, 30, 31, 32, 33, 34, 35, 36)
     LR = load(model)
     rd2l_set = pd.read_csv(data, usecols=cols)
-    rd2l_set = rd2l_set[rd2l_set['Role']!=2]
+    #rd2l_set = rd2l_set[rd2l_set['Role']!=2]
     rd2l_X = rd2l_set.values[:, :len(cols)-1]
     rd2l_Y = rd2l_set.values[:, len(cols)-1]
     rd2l_predictions = LR.predict(rd2l_X)

@@ -22,16 +22,16 @@ if __name__ == '__main__':
 
     stratz_URL = 'http://api.stratz.com/api/v1/'
     opendota_URL = 'http://api.opendota.com/api/'
-    OUT = os.path.join(date.strftime("%Y-%m-%d"),'rd2l_fantasy.out')
-    RAW = os.path.join(date.strftime("%Y-%m-%d"),'rd2l_fantasy.raw')
-    PIC = os.path.join(date.strftime("%Y-%m-%d"),'rd2l_fantasy.png')
+    OUT = os.path.join(date_string,'rd2l_fantasy.out')
+    RAW = os.path.join(date_string,'rd2l_fantasy.raw')
+    PIC = os.path.join(date_string,'rd2l_fantasy.png')
 
     #Only make new DB if not existant yet
-    if not os.path.isdir(date.strftime("%Y-%m-%d")):
-        os.mkdir(os.path.join(date.strftime("%Y-%m-%d")))
+    if not os.path.isdir(date_string):
+        os.mkdir(date_string)
         
     if not os.path.isfile(RAW):
-        print("Fetching List of Games on %s."%date.strftime("%Y-%m-%d"))
+        print("Fetching List of Games on %s."%date_string)
         game_list = fu.get_games(11202, date, 50)
         print("Found %s games."%len(game_list))
         if len(game_list) == 0:
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     player_names=[]
     point_list=[]
 
-    for i in (1,3,2,4,5):
+    for i in (1,2,3,4,5):
         sort_data = rd2l_data[rd2l_data['Role']==i]
         sort_data = sort_data.sort_values(by = 'Fantasy Points', ascending = False)
         player = sort_data.iat[0, 3]
