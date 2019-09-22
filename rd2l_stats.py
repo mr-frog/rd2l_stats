@@ -104,7 +104,7 @@ if __name__ == '__main__':
             if pic.status_code == 200:
                 with open(s_pp, "wb") as f:
                     pic.raw.decode_content = True
-                    shutil.copyfileobj(pic.raw, f)  
+                    shutil.copyfileobj(pic.raw, f)
                     
         print("\tPos %s: %s on %s with %s (<https://www.opendota.com/matches/%s>)"%(i, player, hero, points, game))
         
