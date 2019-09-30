@@ -33,7 +33,7 @@ def get_games(league_id, from_date, take):
         game_date = datetime.date.fromtimestamp(y['startDateTime'])
         if from_date == 0:
             game_list.append(y['id'])
-        elif game_date >= from_date:
+        elif game_date == from_date:
             game_list.append(y['id'])
     print("Found %s games."%len(game_list))
     return game_list
@@ -204,7 +204,7 @@ def make_db(raw_file, OUT, type = 'Ama', pos = 'NA'):
                 #Attempt role detection
                 player_frame.to_csv('temp.csv', index = False)
                 name = player['personaname']
-                role = int(get_roles('role_model.joblib', 'temp.csv'))
+                role = int(get_roles(os.path.join('Data', 'role_model.joblib'), 'temp.csv'))
                 if type == 'Pro':
                     if player['name'] == None:
                         name = player['personaname']
