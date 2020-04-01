@@ -13,14 +13,14 @@ opendota_URL = 'http://api.opendota.com/api/'
 
 def get_herostats(heroStats):
     '''get heroStats.json from opendota for hero names/pics'''
-    
+
     if not os.path.isfile(heroStats):
         h_s = requests.get(opendota_URL+'heroStats').json()
         with open(heroStats, "w") as hs:
             hs.write(json.dumps(h_s))
-            
-            
-            
+
+
+
 def get_games(league_id, from_date, take):
     '''get a list of games in last x days in a given league (rd2l s18 = 11202) from stratz API'''
     game_list = []
@@ -45,7 +45,7 @@ def calc_fscore(player, game):
     #Calculate Teamfight participation
     team_score = (game['dire_score'], game['radiant_score'])[player['isRadiant']]
     tf_participation = round((player['kills'] + player['assists']) / team_score, 2)
-    
+
     return round((
     0.3 * player['kills']
     + 3 - 0.3 * player['deaths']
@@ -61,22 +61,22 @@ def calc_fscore(player, game):
     + 0.05 * player['stuns']
     + 3 * tf_participation
     ), 1)
-    
-   
-   
+
+
+
 def make_raw(game_list, RAW):
     '''populate raw file with match-stats from opendota-API'''
-    
+
     with open(RAW, "w") as raw_file:
         raw_file.write('[\n')
         i = 0
         for game in game_list:
-            print("[%s] Parsing Game %s"%(i+1, game)) 
-            
+            print("[%s] Parsing Game %s"%(i+1, game))
+
             #Request Matchdata
             response = requests.get(opendota_URL+'matches/'+str(game)+'/')
             r = response.json()
-            
+
             # Write raw data for debugging
             raw_file.write(json.dumps(r))
             if game != game_list[-1]:
@@ -92,33 +92,33 @@ def make_raw(game_list, RAW):
                 print('\n')
                 i = 0
         raw_file.write(']')
-    return 
-    
+    return
+
 def prune_data(player, game, hero_data, obs_frame, sen_frame):
 
-    #Calculate Fantasy Score (Valve)
+    #Calculate Fantasy Score (Valve) :D
     fscore = calc_fscore(player, game)
-    
+
     #Calculate Impact (Linail)
     impact = calc_impact(player, game)
-    
+
     #Convert hero_id to Hero Name + Hero Pic
     hero_id = player['hero_id']
     index = hero_data.index[hero_data['id'] == hero_id].tolist()
     hero = hero_data.iat[index[0], 2]
     hero_pic = hero_data.iat[index[0], 6]
-    
+
     #Calculate Damage Taken by Heroes
     damage_taken = 0
     for instance, value in player['damage_taken'].items():
         if 'hero' in instance:
             damage_taken += value
-            
+
     #Get Name
     name = player['personaname']
     if player['name'] != None:
        name = ''.join(i for i in player['name'] if ord(i)<128)
-    
+
     #Observer and Sentry Durations
     obs_durations = []
     sentry_durations = []
@@ -143,7 +143,7 @@ def prune_data(player, game, hero_data, obs_frame, sen_frame):
             time_alive = time_des - time
             if time_alive > 360:
                 time_alive = 360
-            sentry_durations.append(time_alive)   
+            sentry_durations.append(time_alive)
     sum_obs = 0
     sum_sen = 0
     if len(obs_durations) > 0:
@@ -153,44 +153,44 @@ def prune_data(player, game, hero_data, obs_frame, sen_frame):
     role = 0
     impact = 0
     start_date = datetime.date.fromtimestamp(game['start_time']).strftime("%Y-%m-%d")
-    
+
     # Populate Player Frame
     player_frame = pd.DataFrame(
                 [(game['match_id'], player['account_id'], name, hero, hero_pic, game['duration'],
                 player['kills'], player['deaths'], player['assists'], player['last_hits'],
-                player['denies'], player['benchmarks']['lhten']['raw'], player['dn_t'][10], 
+                player['denies'], player['benchmarks']['lhten']['raw'], player['dn_t'][10],
                 player['gold_per_min'], player['xp_per_min'], player['hero_damage'], player['hero_healing'],
                 damage_taken, player['tower_damage'], player['tower_kills'], player['camps_stacked'],
                 player['obs_placed'], sum_obs, player['observer_kills'], player['sen_placed'],
-                sum_sen, player['sentry_kills'], player['teamfight_participation'], 
+                sum_sen, player['sentry_kills'], player['teamfight_participation'],
                 player['stuns'], player['firstblood_claimed'], player['rune_pickups'], player['roshan_kills'],
                 player['lane_role'], role, fscore, impact)],
         columns = ['Match ID', 'Account ID', 'Player', 'Hero', 'Hero Picture',
                 'Game Length', 'Kills', 'Deaths', 'Assists', 'Last Hits', 'Denies', 'LH@10',
                 'Den@10', 'GPM', 'XPM', 'Hero Damage', 'Hero Healing', 'Damage Taken',
                 'Tower Damage', 'Tower Kills', 'Camps Stacked', 'Obs Placed', 'Total Obs Duration',
-                'Obs Killed', 'Sentry Placed', 'Total Sentry Duration', 'Sentry Killed', 
+                'Obs Killed', 'Sentry Placed', 'Total Sentry Duration', 'Sentry Killed',
                 'Teamfight Participation', 'Stun Duration', 'First Blood', 'Rune Pickup',
                 'Roshan Kills', 'Lane Role', 'Role', 'Fantasy Points', 'Impact'])
     return player_frame
-    
+
 def make_db(raw_file, OUT, type = 'Ama', pos = 'NA'):
     '''populate database file with legible match-stats'''
-    
+
     # To convert hero_id into hero name
     heroStats = os.path.join('Data', 'heroStats.json')
     if not os.path.isfile(heroStats):
         get_herostats(heroStats)
     with open(heroStats, "r") as hs:
         hero_dict = json.load(hs)
-        hero_data = pd.DataFrame.from_dict(hero_dict)    
+        hero_data = pd.DataFrame.from_dict(hero_dict)
 
     #Prepare DataFrame
     rd2l_data = pd.DataFrame()
-                                            
+
     with open(raw_file, "r") as raw:
         raw_data = json.load(raw)
-                                                                                       
+
     with open(OUT, "w") as out_file:
         clash = 0
         for game in raw_data:
@@ -233,12 +233,12 @@ def make_db(raw_file, OUT, type = 'Ama', pos = 'NA'):
                 gamerframe = pd.DataFrame(gamers, columns = ["Name", "Role"])
                 print(gamerframe)
                 clash += 1
-        print(clash)        
-        #Write DB to file        
+        print(clash)
+        #Write DB to file
         rd2l_data.to_csv(OUT, index = False)
         if type == 'Pro':
             pos.to_csv('pos_cor.dat', index = False)
-        
+
 def ward_list(game):
     obs_list = []
     sen_list = []
@@ -252,15 +252,15 @@ def ward_list(game):
             for sen_des in player['sen_left_log']:
                 sen_left = (sen_des['time'], sen_des['ehandle'])
                 sen_list.append(sen_left)
-                
+
     obs_frame = pd.DataFrame(obs_list, columns = ['Time Destroyed', 'Ward ID'])
-    sen_frame = pd.DataFrame(sen_list, columns = ['Time Destroyed', 'Ward ID'])    
+    sen_frame = pd.DataFrame(sen_list, columns = ['Time Destroyed', 'Ward ID'])
 
     return obs_frame, sen_frame
-    
+
 def calc_impact(player, game):
-    return 0    
-    
+    return 0
+
 def makeimage(folder, player_names, point_list, date):
     '''generate a fantasy dream team image'''
     #Generate Fantasy Team Image
@@ -281,7 +281,7 @@ def makeimage(folder, player_names, point_list, date):
     p4 = Image.open(os.path.join(folder, '4_player.png')).resize(player_size, resample = 1)
     p5 = Image.open(os.path.join(folder, '5_player.png')).resize(player_size, resample = 1)
     b = Image.new('RGB', (154,154), 'silver')
-       
+
     draw = ImageDraw.Draw(a)
     size = 26
     fnt = ImageFont.truetype('arial.ttf', size)
@@ -289,24 +289,24 @@ def makeimage(folder, player_names, point_list, date):
     date_string = 'CET-' + day + ' - ' + date.strftime('%d.%m.')
     w, h = draw.textsize("RD2L Team of the Week", font = fnt)
     draw.text(((1360-w)/2, 5), "RD2L Team of the Week", font = fnt, fill = 'white')
-    draw.text((30, 8), "%s"%date_string, font = fnt, fill = 'white')      
+    draw.text((30, 8), "%s"%date_string, font = fnt, fill = 'white')
     size = 26
-    fnt = ImageFont.truetype('arial.ttf', size)    
+    fnt = ImageFont.truetype('arial.ttf', size)
 
     r = [50+207+50, 307+207+307, 563+207+563, 873+207+873, 1119+207+1119]
-    
+
     a.paste(b, (int((r[0]-154)/2), p_top-2))
     a.paste(b, (int((r[1]-154)/2), p_top-2))
     a.paste(b, (int((r[2]-154)/2), p_top-2))
     a.paste(b, (int((r[3]-154)/2), p_top-2))
     a.paste(b, (int((r[4]-154)/2), p_top-2))
-    
-    a.paste(h1, (int((r[0]-150)/2), h_top))    
+
+    a.paste(h1, (int((r[0]-150)/2), h_top))
     a.paste(h2, (int((r[1]-150)/2), h_top))
     a.paste(h3, (int((r[2]-150)/2), h_top))
     a.paste(h4, (int((r[3]-150)/2), h_top))
     a.paste(h5, (int((r[4]-150)/2), h_top))
-    
+
     a.paste(p1, (int((r[0]-150)/2), p_top))
     a.paste(p2, (int((r[1]-150)/2), p_top))
     a.paste(p3, (int((r[2]-150)/2), p_top))
@@ -324,14 +324,14 @@ def makeimage(folder, player_names, point_list, date):
         draw.text(((r[i]-w)/2, (top+164-h)/2), name, font = fnt, fill = 'white')
         i += 1
     i = 0
-    
+
     for points in point_list:
         size = 20
         fnt = ImageFont.truetype('arial.ttf', size)
         w, h = draw.textsize(str(points), font = fnt)
         draw.text(((r[i]-w)/2, h_top + 112), str(points), font = fnt)
         i += 1
-    return a   
+    return a
 
 def get_roles(model, data):
     cols = (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22 ,23, 24, 25, 26, 27, 28, 30, 31, 32, 33)
@@ -340,4 +340,4 @@ def get_roles(model, data):
     rd2l_X = rd2l_set.values[:, :len(cols)-1]
     rd2l_Y = rd2l_set.values[:, len(cols)-1]
     rd2l_predictions = rfc.predict(rd2l_X)
-    return rd2l_predictions    
+    return rd2l_predictions
